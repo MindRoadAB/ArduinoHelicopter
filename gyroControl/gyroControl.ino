@@ -1,6 +1,6 @@
 #include <BMI160Gen.h>
-//Project requires Emotibit BMI160 library
-//I might have modified the library myself.
+//Project requires Emotibit BMI160 library.
+//Modified library is included in Git repository.
 
 //For the IR LED
 const int outpin = 3;
@@ -13,14 +13,16 @@ byte base[4] = {63, 63, 15, 63};
 
 //TODO: Channel select
 int channel;
-int count = 0;
+//Frequency that the helicopter communicates over (KHz).
 unsigned int freq = 38000;
 
-//Start control at this step
+//Start control at this step.
+//Keep throttle start as multiple of step to make calculations easier.
 byte throttle = 15;
 //Each throttle step.
 //TODO: Test with smaller intervals, though response can end up sluggish. 
 byte step = 5;
+
 
 
 //Comment out if the gyro is not connected
@@ -55,8 +57,7 @@ void setup() {
 //To connect with the helicopter
 void sync() {
   byte init[] = {63,63,0,63};
-
-  //TODO: Try to remove the '127' step to avoid the litte skip it starts with
+  
   byte change[] = {20, 60, 94,  78, 35, 0, 0};
   //Throttle up then down to sync with the helicopter
   for(int i = 0; i < 6; i++) {
@@ -83,10 +84,12 @@ void decreaseThrottle() {
 }
 
 
-//Total range of gyro output is  +/- ~5500
-//Cap that to 3465 to lower angle needed for reactions to happen
-//3465 is 55*127, keep that relationship to make calculations easier. 
-//The values can be modified to test different responses
+//Total range of gyro output is  +/- ~5500.
+//The values can be modified to test different responses.
+//Cap that value to lower angle needed for reactions to happen since ~5500 equals 90deg card angle.
+//3465 is 55*63, keep that relationship to make calculations easier. 
+// So xLim = xDiv*63
+
 int xLim = 3465;
 int xDiv = 55;
 int yLim = 3465;
@@ -104,7 +107,7 @@ void loop() {
   BMI160.readAccelerometer(gxRaw, gyRaw, gzRaw);
 
 
-   //Assume max value is xLim, yLim, gives about 30deg in each direction
+   //Assume max value is xLim, yLim, gives about 30deg control deflection in each direction
   if(gxRaw > xLim) {
     gxRaw = xLim;
   } else if (gxRaw < -xLim) {
@@ -125,6 +128,7 @@ void loop() {
 #endif
   base[2] = throttle;
 
+  transmit(base);
   Serial.print("Commands P:");
   Serial.print(base[1]);
   Serial.print(" Y:");
@@ -132,8 +136,7 @@ void loop() {
   Serial.print(" T:");
   Serial.print(base[2]);
   Serial.println();
-
-  transmit(base);
+  
   delay(120);
   
 }
@@ -142,6 +145,7 @@ void loop() {
 |a-YAW--- b-PITCH- C-THRTTL d-TRIM  |
 Last byte, trim, not used, trim value is added/removed from YAW
 C is the channel flag
+other flags are not used
 */
 void transmit(byte data[]) {
     sendHead();
@@ -156,7 +160,7 @@ void transmit(byte data[]) {
     } else {
       sendZero();
     }
-    //Then the control data, 7 bits
+    //Then the control data, 7 bits, reverse order
     for(int i = 0; i < 7; i++) {
       if(bitRead(data[part], 6-i) == 0) {
         sendZero();
