@@ -24,6 +24,8 @@ To edit how the angle of the board translates into commands for the helicopter, 
 
 The throttle response the can be modified as well. A larger step means every 120 milliseconds, the throttle is increased by that amount up to 127. The base throttle setting is a multiple of the step to make calculations easy as well. Small steps are recommended if you want it easy to acheive a steady hover.
 
+If you have issues uploading your program to an Arduino Nano, the IDE might be using the wrong bootloader, which can be changed by following "Tools -> Processor -> ATmega328P (Old Bootloader)".
+
 
 ## TODO
 - Setup channel handling. Currently, the program only uses a single channel.
@@ -33,4 +35,6 @@ The throttle response the can be modified as well. A larger step means every 120
 
 ## Extras
 The entire protocol for the transmitter/receiver communication can be found at http://www.jimhung.co.uk/wp-content/uploads/2013/01/Syma107_ProtocolSpec_v1.txt
+
+The original BMI160 library can be found at https://github.com/hanyazou/BMI160-Arduino
 
