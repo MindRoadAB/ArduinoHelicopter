@@ -26,7 +26,7 @@ byte step = 5;
 
 
 //Comment out if the gyro is not connected
-//#define GOTGY
+#define GOTGY
 
 const int i2c_addr = 0x68;
 
@@ -83,6 +83,9 @@ void decreaseThrottle() {
   }
 }
 
+void zeroThrottle() {
+  throttle = 0;
+}
 
 //Total range of gyro output is  +/- ~5500.
 //The values can be modified to test different responses.
@@ -90,13 +93,18 @@ void decreaseThrottle() {
 //3465 is 55*63, keep that relationship to make calculations easier. 
 // So xLim = xDiv*63
 
-int xLim = 3465;
-int xDiv = 55;
-int yLim = 3465;
-int yDiv = 55;
+//int xLim = 3465;
+int xDiv = 20;
+//int yLim = 3465;
+int yDiv = 45;
+int xLim = xDiv * 63;
+int yLim = yDiv * 63;
 
 void loop() {
-  if(digitalRead(incPin) == HIGH) {
+  //Emergency stop
+  if(digitalRead(incPin) == HIGH && digitalRead(decPin) == HIGH) {
+    zeroThrottle();
+  } else if(digitalRead(incPin) == HIGH) {
     increaseThrottle();
   } else if (digitalRead(decPin) == HIGH) {
     decreaseThrottle();
@@ -122,7 +130,7 @@ void loop() {
   //Convert from scale of xLim, yLim to 127 value scale.
   //Add 63 to center the value according to protocol.
   float pitch = (gxRaw/xDiv)+63;
-  float yaw = (gyRaw/xDiv)+63;
+  float yaw = (gyRaw/yDiv)+63;
   base[0] = byte(yaw);
   base[1] = byte(pitch);
 #endif
